@@ -1,0 +1,11 @@
+name: RankSync
+api-version: 1.13
+version: 1.0
+main: sh.okx.ranksync.RankSync
+depend: [Vault]
+author: Okx
+
+commands:
+  verify:
+    description: Link your in-game rank and Discord role
+    permission: ranksync.verify

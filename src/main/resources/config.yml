@@ -1,0 +1,22 @@
+bot-token: ""
+guild-name: "test"
+discord-verify-command: '!verify'
+
+log:
+  format: "**[Server]** %user%: %message%"
+  channel: "log"
+  # milliseconds between the bot sending messages
+  # if we just send a message straight when it's sent it hits discord ratelimits
+  # 1000 is the minimum you can set it to
+  rate: 1000
+
+presence:
+  # listening, streaming, watching or default (playing)
+  type: default
+  format: "%current%/%max% online"
+
+# list of what ranks represent what roles, in the format 'rank:rolename'
+ranks:
+- 'Lord:Lord/Lady'
+- 'Lady:Lord/Lady'
+- 'Champion:Champion'
