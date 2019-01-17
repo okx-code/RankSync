@@ -18,6 +18,8 @@ public class MySQLHandler {
 	private final Plugin plugin;
 	public MySQLHandler(Plugin plugin) {
 		this.plugin = plugin;
+		connect();
+		createDatabase();
 	}
 	
 	private static HikariDataSource hikari;
@@ -61,7 +63,7 @@ public class MySQLHandler {
         }
     }
 
-    public void createDatabase()
+    private void createDatabase()
     {
         try
         {

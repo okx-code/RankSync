@@ -9,6 +9,8 @@ import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.managers.GuildController;
+import sh.okx.ranksync.database.MySQLHandler;
+
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -64,6 +66,12 @@ public class MessageListener extends ListenerAdapter {
 	    } else {
 	    	Bukkit.getLogger().log(Level.WARNING, "Discord role: " + pendingVerificationName + " to be removed was not found!");
 	    }
+    }
+    
+    //Save the association if possible
+    final MySQLHandler db = plugin.getDB();
+    if (db != null) {
+    	db.createUser(player.getUniqueId(), author.getId());
     }
     
     for (Role role : plugin.getRoles(player)) {

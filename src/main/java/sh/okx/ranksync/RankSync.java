@@ -7,6 +7,8 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Role;
 import net.milkbowl.vault.permission.Permission;
+import sh.okx.ranksync.database.MySQLHandler;
+
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,7 +27,9 @@ public class RankSync extends JavaPlugin {
   private JDA jda;
   private ChatListener chatListener;
   private StatusService status;
-
+  private MySQLHandler db;
+  
+  
   public String addCode(UUID uuid) {
     for (Map.Entry<String, UUID> code : codes.asMap().entrySet()) {
       if (code.getValue().equals(uuid)) {
@@ -62,6 +66,12 @@ public class RankSync extends JavaPlugin {
           .build();
     } catch (LoginException e) {
       throw new RuntimeException(e);
+    }
+    
+    try {
+    	db = new MySQLHandler(this);
+    } catch (Exception e) {
+    	e.printStackTrace();
     }
 
     RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
@@ -100,5 +110,9 @@ public class RankSync extends JavaPlugin {
 
   public Guild getGuild() {
     return jda.getGuildsByName(getConfig().getString("guild-name"), true).get(0);
+  }
+  
+  public MySQLHandler getDB() {
+	  return db;
   }
 }
