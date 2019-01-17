@@ -14,6 +14,8 @@ import sh.okx.ranksync.database.MySQLHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
+import javafx.util.Pair;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -68,10 +70,19 @@ public class MessageListener extends ListenerAdapter {
 	    }
     }
     
-    //Save the association if possible
+    //Save the association if possible + check for anyone swapping codes
     final MySQLHandler db = plugin.getDB();
     if (db != null) {
-    	db.createUser(player.getUniqueId(), author.getId());
+    	if (!db.userExists(player.getUniqueId())) {
+    		db.createUser(player.getUniqueId(), author.getId());
+    	} else {
+    		Pair<UUID, String> knownAssociation = db.getValue(player.getUniqueId());
+    		if (!knownAssociation.getKey().equals(player.getUniqueId()) ||
+    				!knownAssociation.getValue().equals(author.getId())) {
+    			channel.sendMessage("Does not fit prior associations made. Please double check with a Discord Admin.");
+    			return;
+    		}
+    	}
     }
     
     for (Role role : plugin.getRoles(player)) {
