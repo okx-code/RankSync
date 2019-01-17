@@ -1,6 +1,7 @@
 package sh.okx.ranksync;
 
 import lombok.RequiredArgsConstructor;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.entities.Role;
@@ -11,11 +12,14 @@ import net.dv8tion.jda.core.managers.GuildController;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 
 @RequiredArgsConstructor
 public class MessageListener extends ListenerAdapter {
   private final RankSync plugin;
+  private String pendingVerificationName;
 
   @Override
   public void onMessageReceived(MessageReceivedEvent event) {
@@ -28,6 +32,7 @@ public class MessageListener extends ListenerAdapter {
     String message = event.getMessage().getContentRaw();
     String[] parts = message.split(" ", 2);
     String command = plugin.getConfig().getString("discord-verify-command");
+    pendingVerificationName = plugin.getConfig().getString("discord-role-to-be-removed-on-verification");
     if (!parts[0].equalsIgnoreCase(command)) {
       return;
     } else if (parts.length < 2) {
@@ -50,10 +55,21 @@ public class MessageListener extends ListenerAdapter {
 
     GuildController controller = plugin.getGuild().getController();
     StringBuilder roles = new StringBuilder();
+    Member member = plugin.getGuild().getMember(author);
+    
+    if (pendingVerificationName != null) {
+	    final List<Role> rolesToBeScanned = plugin.getGuild().getRolesByName(pendingVerificationName, true);
+	    if (rolesToBeScanned.size() != 0) {
+	        controller.removeSingleRoleFromMember(member, rolesToBeScanned.get(0));
+	    } else {
+	    	Bukkit.getLogger().log(Level.WARNING, "Discord role: " + pendingVerificationName + " to be removed was not found!");
+	    }
+    }
+    
     for (Role role : plugin.getRoles(player)) {
       roles.append("\n").append(role.getName());
 
-      controller.addSingleRoleToMember(plugin.getGuild().getMember(author), role).queue();
+      controller.addSingleRoleToMember(member, role).queue();
     }
 
     if (roles.length() == 0) {

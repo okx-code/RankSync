@@ -20,3 +20,14 @@ ranks:
 - 'Lord:Lord/Lady'
 - 'Lady:Lord/Lady'
 - 'Champion:Champion'
+
+# role to be removed when user verifies
+discord-role-to-be-removed-on-verification: 'PendingVerification'
+
+#MySQL connection info
+MySQL:
+  host: localhost
+  port: 3306
+  user: root
+  database: minecraft
+  password: ''
