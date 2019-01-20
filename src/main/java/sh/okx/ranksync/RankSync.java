@@ -78,6 +78,7 @@ public class RankSync extends JavaPlugin {
     permission = rsp.getProvider();
 
     getCommand("verify").setExecutor(new VerifyCommand(this));
+    getCommand("discordmsg").setExecutor(new DiscordMessageCommand(this));
     status = new StatusService(jda, getConfig().getConfigurationSection("presence"));
     status.startAsync();
   }

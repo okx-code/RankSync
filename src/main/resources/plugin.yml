@@ -9,3 +9,8 @@ commands:
   verify:
     description: Link your in-game rank and Discord role
     permission: ranksync.verify
+  discordmsg:
+    description: Make the bot say a discord message in the specifed channel.
+    permission: ranksync.msg
+    usage: /discordmsg [channel name] [message]
+    
