@@ -12,5 +12,5 @@ commands:
   discordmsg:
     description: Make the bot say a discord message in the specifed channel.
     permission: ranksync.msg
-    usage: /discordmsg [channel name] [message]
+    usage: /discordmsg [server_name] [channel name] [message]
     

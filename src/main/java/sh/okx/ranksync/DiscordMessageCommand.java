@@ -37,7 +37,7 @@ public class DiscordMessageCommand implements CommandExecutor {
 		}
 		
 		final StringBuffer sb = new StringBuffer();
-		for(int i = 1; i < args.length; i++) {
+		for(int i = 2; i < args.length; i++) {
 			sb.append(args[i]);
 			if (i != args.length - 1) {
 				sb.append(" ");
