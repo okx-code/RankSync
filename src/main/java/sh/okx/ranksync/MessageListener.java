@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.managers.GuildController;
 import sh.okx.ranksync.database.MySQLHandler;
@@ -21,7 +22,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 @RequiredArgsConstructor
-public class MessageListener extends ListenerAdapter {
+public class MessageListener extends ListenerAdapter implements EventListener {
   private final RankSync plugin;
   private String pendingVerificationName;
 

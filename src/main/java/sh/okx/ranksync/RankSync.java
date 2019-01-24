@@ -113,6 +113,10 @@ public class RankSync extends JavaPlugin {
     return jda.getGuildsByName(getConfig().getString("guild-name"), true).get(0);
   }
   
+  public JDA getJDA() {
+	  return jda;
+  }
+  
   public MySQLHandler getDB() {
 	  return db;
   }
