@@ -87,6 +87,7 @@ public class RankSync extends JavaPlugin {
   public void onDisable() {
     chatListener.stop();
     status.stopAsync().awaitTerminated();
+    jda.shutdown();
   }
 
   public Set<Role> getRoles(OfflinePlayer player) {
