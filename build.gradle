@@ -1,11 +1,11 @@
 plugins {
     id 'java'
-    id 'io.franzbecker.gradle-lombok' version '1.14'
-    id "com.github.johnrengelman.shadow" version "4.0.3"
+    id "io.freefair.lombok" version "5.1.0"
+    id "com.github.johnrengelman.shadow" version "5.2.0"
 }
 
 group 'sh.okx'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 sourceCompatibility = 1.8
 
@@ -20,22 +20,15 @@ repositories {
     }
 }
 
-jar {
-    manifest {
-        attributes "Main-Class": "com.baeldung.fatjar.Application"
-    }
- 
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+shadowJar {
+    classifier = null
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    shadow 'com.zaxxer:HikariCP:2.3.2'
-    shadow 'org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT'
-    shadow "net.milkbowl.vault:VaultAPI:1.7"
-    compile ('net.dv8tion:JDA:3.7.+') {
+    implementation 'com.zaxxer:HikariCP:3.4.5'
+    implementation ('net.dv8tion:JDA:4.1.1_157') {
         exclude module: 'opus-java'
     }
+    shadow 'net.luckperms:api:5.0'
+    shadow 'net.md-5:bungeecord-api:1.15-SNAPSHOT'
 }

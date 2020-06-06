@@ -1,29 +1,32 @@
 package sh.okx.ranksync;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Game;
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.ConfigurationSection;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Activity.ActivityType;
+import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.config.Configuration;
 
 import java.util.concurrent.TimeUnit;
 
 public class StatusService extends AbstractScheduledService {
   private final JDA jda;
-  private final Game.GameType type;
+  private final int activity;
   private final String format;
 
-  public StatusService(JDA jda, ConfigurationSection section) {
+  public StatusService(JDA jda, Configuration section) {
     this.jda = jda;
-    this.type = Game.GameType.valueOf(section.getString("type").toUpperCase());
+    this.activity = section.getInt("type");
     this.format = section.getString("format");
   }
 
   @Override
   protected void runOneIteration() {
-    jda.getPresence().setGame(Game.of(type, format
-        .replace("%current%", String.valueOf(Bukkit.getOnlinePlayers().size()))
-        .replace("%max%", String.valueOf(Bukkit.getMaxPlayers()))));
+    int playerLimit = ProxyServer.getInstance().getConfig().getPlayerLimit();
+    int players = ProxyServer.getInstance().getPlayers().size();
+    jda.getPresence().setActivity(Activity.of(ActivityType.fromKey(activity), format
+        .replace("%current%", String.valueOf(players))
+        .replace("%max%", String.valueOf(playerLimit))));
   }
 
   @Override

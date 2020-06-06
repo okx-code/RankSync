@@ -1,53 +1,46 @@
 package sh.okx.ranksync;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.plugin.Command;
+
 import net.md_5.bungee.api.ChatColor;
 
-public class DiscordMessageCommand implements CommandExecutor {
+public class DiscordMessageCommand extends Command {
 	private RankSync plugin;
 	
 	public DiscordMessageCommand(RankSync plugin) {
+		super("discordmsg", "ranksync.msg");
 		this.plugin = plugin;
 	}
-	
+
 	@Override
-	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+	public void execute(CommandSender sender, String[] args) {
 		if (args.length < 3) {
-			return false;
+			sender.sendMessage("/discordmsg [server_name] [channel_name] [message]");
+			return;
 		}
-		
+
 		Guild guild;
 		try {
 			guild = plugin.getJDA().getGuildsByName(args[0].replaceAll("_", " "), true).get(0);
 		} catch (Exception e) {
 			sender.sendMessage("Cannot access guild: " + args[0]);
-			return true;
+			return;
 		}
-		
+
 		TextChannel channel;
 		try {
 			channel = guild.getTextChannelsByName(args[1], true).get(0);
 		} catch (Exception e) {
 			sender.sendMessage("Cannot access text channel: " + args[1]);
-			return true;
+			return;
 		}
-		
-		final StringBuffer sb = new StringBuffer();
-		for(int i = 2; i < args.length; i++) {
-			sb.append(args[i]);
-			if (i != args.length - 1) {
-				sb.append(" ");
-			}
-		}
-		
-		final String buffer = ChatColor.translateAlternateColorCodes('&', sb.toString());
+
+		final String buffer = ChatColor.translateAlternateColorCodes('&', String.join(" ", args));
 		channel.sendMessage(buffer).queue();
 		sender.sendMessage("Message sent to " + channel.getGuild().getName() + "." + channel.getName());
-		return true;
+		return;
 	}
-
 }

@@ -2,24 +2,20 @@ bot-token: ""
 guild-name: "test"
 discord-verify-command: '!verify'
 
-log:
-  format: "**[Server]** %user%: %message%"
-  channel: "log"
-  # milliseconds between the bot sending messages
-  # if we just send a message straight when it's sent it hits discord ratelimits
-  # 1000 is the minimum you can set it to
-  rate: 1000
-
 presence:
-  # listening, streaming, watching or default (playing)
-  type: default
+  # 0 = default
+  # 1 = streaming
+  # 2 = listening
+  # 3 = watching
+  # 4 = custom status
+  type: 4
   format: "%current%/%max% online"
 
 # list of what ranks represent what roles, in the format 'rank:rolename'
 ranks:
-- 'Lord:Lord/Lady'
-- 'Lady:Lord/Lady'
-- 'Champion:Champion'
+  - 'Lord:Lord/Lady'
+  - 'Lady:Lord/Lady'
+  - 'Champion:Champion'
 
 # role to be removed when user verifies
 discord-role-to-be-removed-on-verification: 'PendingVerification'
@@ -31,3 +27,6 @@ MySQL:
   user: root
   database: minecraft
   password: ''
+
+messages:
+  not-eligible: "You were not eligible for any roles."

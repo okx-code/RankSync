@@ -1,17 +1,23 @@
 package sh.okx.ranksync;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Role;
-import net.milkbowl.vault.permission.Permission;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.stream.Collectors;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.node.NodeType;
+import net.luckperms.api.node.types.InheritanceNode;
+import net.md_5.bungee.api.plugin.Plugin;
+import net.md_5.bungee.config.Configuration;
+import net.md_5.bungee.config.ConfigurationProvider;
+import net.md_5.bungee.config.YamlConfiguration;
 import sh.okx.ranksync.database.MySQLHandler;
-
-import org.bukkit.OfflinePlayer;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.security.auth.login.LoginException;
 import java.util.HashMap;
@@ -21,34 +27,35 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class RankSync extends JavaPlugin {
-  private final Cache<String, UUID> codes = CacheBuilder.newBuilder().maximumSize(100).build();
-  private Permission permission;
+public class RankSync extends Plugin {
+
+  private final Map<String, Code> codes = new MaxSizeHashMap<>(255);
   private JDA jda;
-  private ChatListener chatListener;
   private StatusService status;
   private MySQLHandler db;
-  
-  
+  private Configuration config;
+
+
   public String addCode(UUID uuid) {
-    for (Map.Entry<String, UUID> code : codes.asMap().entrySet()) {
-      if (code.getValue().equals(uuid)) {
-        codes.asMap().remove(code.getKey());
+    for (Map.Entry<String, Code> code : codes.entrySet()) {
+      Code c = code.getValue();
+      if (c.getUniqueId().equals(uuid)) {
+        codes.remove(code.getKey());
       }
     }
 
     String key = randomCode();
-    codes.put(key, uuid);
+    codes.put(key, new Code(uuid, System.currentTimeMillis()));
     return key;
   }
 
-  public UUID getCode(String code) {
-    return codes.asMap().remove(code);
+  public Code getCode(String code) {
+    return codes.remove(code);
   }
 
   private String randomCode() {
     String code = String.format("%04d", ThreadLocalRandom.current().nextInt(10000));
-    if (codes.asMap().containsKey(code)) {
+    if (codes.containsKey(code)) {
       return randomCode();
     } else {
       return code;
@@ -58,48 +65,76 @@ public class RankSync extends JavaPlugin {
   @Override
   public void onEnable() {
     saveDefaultConfig();
-    getServer().getPluginManager().registerEvents(chatListener = new ChatListener(this), this);
+    config = getConfig();
+
     try {
-      jda = new JDABuilder(getConfig().getString("bot-token"))
-          .addEventListener(new MessageListener(this))
-          .addEventListener(chatListener)
+      jda = JDABuilder.createDefault(config.getString("bot-token"))
+          .addEventListeners(new MessageListener(this, config))
           .build();
     } catch (LoginException e) {
       throw new RuntimeException(e);
     }
-    
+
     try {
-    	db = new MySQLHandler(this);
+      db = new MySQLHandler(config);
     } catch (Exception e) {
-    	e.printStackTrace();
+      e.printStackTrace();
     }
 
-    RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
-    permission = rsp.getProvider();
-
-    getCommand("verify").setExecutor(new VerifyCommand(this));
-    getCommand("discordmsg").setExecutor(new DiscordMessageCommand(this));
-    status = new StatusService(jda, getConfig().getConfigurationSection("presence"));
+    getProxy().getPluginManager().registerCommand(this, new VerifyCommand(this));
+    getProxy().getPluginManager().registerCommand(this, new DiscordMessageCommand(this));
+    status = new StatusService(jda, config.getSection("presence"));
     status.startAsync();
+  }
+
+  private void saveDefaultConfig() {
+    if (!getDataFolder().exists()) {
+      getDataFolder().mkdir();
+    }
+
+    File file = new File(getDataFolder(), "config.yml");
+
+    if (!file.exists()) {
+      try (InputStream in = getResourceAsStream("config.yml")) {
+        Files.copy(in, file.toPath());
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private Configuration getConfig() {
+    try {
+      return ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
   public void onDisable() {
-    chatListener.stop();
-    status.stopAsync().awaitTerminated();
+    if (status != null) {
+      status.stopAsync().awaitTerminated();
+    }
     jda.shutdown();
   }
 
-  public Set<Role> getRoles(OfflinePlayer player) {
+  public Set<Role> getRoles(UUID player) {
     Map<String, Role> roleMap = new HashMap<>();
-    for (String entry : getConfig().getStringList("ranks")) {
+    for (String entry : config.getStringList("ranks")) {
       String[] parts = entry.split(":");
       roleMap.put(entry, getGuild().getRolesByName(parts[1], true).get(0));
     }
 
     Set<Role> roles = new HashSet<>();
-    for (String rank : permission.getPlayerGroups(null, player)) {
-      for (String entry : getConfig().getStringList("ranks")) {
+    LuckPerms luckPerms = LuckPermsProvider.get();
+    Set<String> groups = luckPerms.getUserManager().getUser(player).getNodes().stream()
+        .filter(NodeType.INHERITANCE::matches)
+        .map(NodeType.INHERITANCE::cast)
+        .map(InheritanceNode::getGroupName)
+        .collect(Collectors.toSet());
+    for (String rank : groups) {
+      for (String entry : config.getStringList("ranks")) {
         String[] parts = entry.split(":");
         if (parts[0].equalsIgnoreCase(rank)) {
           roles.add(getGuild().getRolesByName(parts[1], true).get(0));
@@ -111,14 +146,18 @@ public class RankSync extends JavaPlugin {
   }
 
   public Guild getGuild() {
-    return jda.getGuildsByName(getConfig().getString("guild-name"), true).get(0);
+    return jda.getGuildsByName(config.getString("guild-name"), true).get(0);
   }
-  
+
   public JDA getJDA() {
-	  return jda;
+    return jda;
   }
-  
+
   public MySQLHandler getDB() {
-	  return db;
+    return db;
+  }
+
+  public String getDiscordVerifyCommand() {
+    return config.getString("discord-verify-command");
   }
 }
