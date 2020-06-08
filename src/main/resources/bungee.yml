@@ -1,5 +1,5 @@
 name: RankSync
-version: 1.0
+version: 1.0.1
 main: sh.okx.ranksync.RankSync
 author: Okx
 depends: [LuckPerms]
