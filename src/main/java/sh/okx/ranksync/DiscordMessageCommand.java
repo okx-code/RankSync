@@ -38,7 +38,15 @@ public class DiscordMessageCommand extends Command {
 			return;
 		}
 
-		final String buffer = ChatColor.translateAlternateColorCodes('&', String.join(" ", args));
+		final StringBuffer sb = new StringBuffer();
+		for(int i = 2; i < args.length; i++) {
+			sb.append(args[i]);
+			if (i != args.length - 1) {
+				sb.append(" ");
+			}
+		}
+
+		final String buffer = ChatColor.translateAlternateColorCodes('&', sb.toString());
 		channel.sendMessage(buffer).queue();
 		sender.sendMessage("Message sent to " + channel.getGuild().getName() + "." + channel.getName());
 		return;
